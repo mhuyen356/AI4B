@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bot Studio - Xây dựng chatbot</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f1f4f8;--pan:#fff;--ink:#1c2733;--mute:#66758a;--line:#d8e0ea;--pri:#1565c0;--prib:#e3eefb;--ora:#e8730c;--bad:#b3261e;--ok:#1b7f3b;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1620;--pan:#16222f;--ink:#e6edf5;--mute:#94a5b8;--line:#2a3a4c;--pri:#6fb0ff;--prib:#1b3a5c;--ora:#ffa24d;--bad:#ff8a80;--ok:#6fd48a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1620;--pan:#16222f;--ink:#e6edf5;--mute:#94a5b8;--line:#2a3a4c;--pri:#6fb0ff;--prib:#1b3a5c;--ora:#ffa24d;--bad:#ff8a80;--ok:#6fd48a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 "Be Vietnam Pro",system-ui,sans-serif}
+.top{background:var(--pan);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.logo{font-weight:600;color:var(--pri)}.logo b{color:var(--ora)}
+.top small{color:var(--mute);margin-left:auto}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+h1,h2,h3{margin:0 0 8px;line-height:1.3}h1{font-size:22px}h2{font-size:18px}h3{font-size:15px}
+.card{background:var(--pan);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+button{font:inherit;cursor:pointer;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--pan);color:var(--ink);padding:6px 14px}
+button.p{background:var(--pri);color:#fff;border-color:var(--pri)}
+:root[data-theme="dark"] button.p{color:#0e1620}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button.p{color:#0e1620}}
+button.o{background:var(--ora);border-color:var(--ora);color:#fff}
+button.d{color:var(--bad)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--ora);outline-offset:2px}
+input,textarea,select{font:inherit;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+label{display:block;font-weight:500;margin:10px 0 4px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;white-space:nowrap}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--pri);color:var(--pri);font-weight:600}
+.cols{display:grid;gap:16px}
+@media(min-width:900px){.cols{grid-template-columns:1fr 340px;align-items:start}.chatp{position:sticky;top:12px}}
+.il{display:flex;flex-direction:column;gap:6px}
+.il button{text-align:left}.il button[aria-pressed="true"]{background:var(--prib);border-color:var(--pri);color:var(--pri)}
+.sm{display:flex;gap:8px;align-items:center;margin-bottom:6px}.sm span{flex:1}
+.tag{display:inline-block;background:var(--prib);color:var(--pri);border-radius:10px;padding:1px 8px;font-size:12px}
+.warn{color:var(--ora);font-weight:500}.ok{color:var(--ok);font-weight:500}.mut{color:var(--mute);font-size:13px}
+.log{height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 0}
+.m{padding:8px 12px;border-radius:12px;max-width:88%}
+.u{align-self:flex-end;background:var(--pri);color:#fff}
+:root[data-theme="dark"] .u{color:#0e1620}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .u{color:#0e1620}}
+.b{align-self:flex-start;background:var(--prib)}
+.dbg{display:block;font-size:12px;color:var(--mute);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.chips button{border-radius:16px;min-height:34px;font-size:14px}
+.row{display:flex;gap:8px}.row input{flex:1}.row button{flex:none}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto;font-size:13px}
+.bar{height:8px;background:var(--prib);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pri)}
+</style>
+</head>
+<body>
+<div class="top"><span class="logo">Bot<b>Studio</b></span><span class="mut">Xây dựng chatbot theo quy trình: Tạo bot, NLP, Kịch bản, Tích hợp</span><small>Mô phỏng giao diện FPT.AI Conversation cho bài tập lớn</small></div>
+<div class="wrap" id="root"></div>
+<script>
+function norm(s){return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").toLowerCase()}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var SW=["la","gi","cua","va","co","khong","the","nao","nhu","nhung","cho","toi","ban","oi","vay","duoc","lam","ra","sao","a","ha","ak","di","nhe"];
+function tok(s){var w=norm(s).replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(function(x){return x&&SW.indexOf(x)<0}),o={};w.forEach(function(x,i){o[x]=1;if(i)o[w[i-1]+"_"+x]=1});return o}
+function dice(a,b){var n=0,ka=Object.keys(a),kb=Object.keys(b);ka.forEach(function(k){if(b[k])n++});return ka.length+kb.length?2*n/(ka.length+kb.length):0}
+function I(id,s,a,b){return{id:id,name:id,samples:s,answer:a,btn:b||[]}}
+function preset(){var it=[
+I("chao_hoi",["xin chào","chào bạn","bạn là ai","giới thiệu về bạn","hello"],"Xin chào! Mình là trợ lý của Bảo tàng Dân tộc học Việt Nam. Bạn muốn hỏi về trống đồng Đông Sơn hay về Thăng Long?",["Trống đồng làm bằng gì?","Vì sao dời đô?"]),
+I("hoi_hop_kim",["trống đồng làm bằng gì","hợp kim đồng gồm những gì","chất liệu của trống đồng","thiếc và chì dùng để làm gì"],"Đồ đồng Đông Sơn là hợp kim của đồng, thiếc và chì. Pha như vậy thì đồng dễ chảy vào khuôn và cứng hơn. [KB-DS-01]",["Trống được đúc thế nào?"]),
+I("hoi_duc_khuon",["trống được đúc như thế nào","kỹ thuật đúc đồng","khuôn đúc làm bằng gì","các bước làm trống đồng"],"Thợ nấu chảy hợp kim rồi rót vào khuôn ghép bằng đất sét và cát, để nguội mới tháo khuôn và mài chuốt hoa văn. [KB-DS-02]",["Trống dùng để làm gì?"]),
+I("hoi_cong_dung",["trống đồng dùng để làm gì","công dụng của trống đồng","ý nghĩa của trống đồng","trống đánh khi nào"],"Trống đồng dùng trong lễ hội cầu mùa, làm hiệu lệnh, và là biểu tượng quyền uy của thủ lĩnh. [KB-DS-03]",["Hoa văn trên trống là gì?"]),
+I("hoi_hoa_van",["hoa văn trên mặt trống là gì","ngôi sao giữa mặt trống","mặt trống có mấy cánh sao","trang trí trên trống Ngọc Lũ"],"Chính giữa mặt trống là ngôi sao nhiều cánh, bao quanh là các vành hoa văn có chim bay, hươu và người hóa trang lông chim. Trống Ngọc Lũ có ngôi sao 14 cánh. [KB-DS-04]",[]),
+I("hoi_doi_do",["vì sao dời đô","dời đô năm nào","từ Hoa Lư ra Đại La","tại sao vua Lý dời đô"],"Năm 1010, Lý Công Uẩn dời kinh đô từ Hoa Lư ra Đại La, vùng đất rộng rãi, thuận lợi giao thông và buôn bán hơn. [KB-TL-01]",["Tên Thăng Long nghĩa là gì?"]),
+I("hoi_ten_thang_long",["Thăng Long nghĩa là gì","vì sao đặt tên Thăng Long","tên Thăng Long có từ đâu","chuyện rồng vàng"],"Thăng Long nghĩa là “rồng bay lên”. Tên này gắn với truyền thuyết nhà vua thấy rồng vàng hiện lên khi thuyền đến thành Đại La. [KB-TL-02]",["Phố nghề là gì?"]),
+I("hoi_pho_nghe",["phố nghề là gì","vì sao gọi là 36 phố phường","phố Hàng Đồng bán gì","phường nghề hình thành thế nào"],"Thợ thủ công cùng nghề tụ về một phường, lâu dần thành phố nghề, nhiều phố mang tên Hàng như Hàng Đồng, Hàng Bạc. [KB-TL-03]",[])];
+return mk("Trợ lý Bảo tàng Dân tộc học","Tiếng Việt","Chatbot hỏi đáp về hiện vật Đông Sơn và Thăng Long, chỉ trả lời từ kho tri thức đã được bảo tàng duyệt.",it)}
+function mk(n,l,d,it){var b={id:"bot"+Math.random().toString(36).slice(2,7),name:n,lang:l,desc:d,intents:it||[],thr:0.4,fb:"Mình chưa hiểu câu hỏi này hoặc chưa có trong kho tri thức đã kiểm duyệt. Bạn thử hỏi về trống đồng, hợp kim, dời đô hoặc phố nghề nhé.",chat:[],msgs:0,hit:0,top:{}};b.model=JSON.parse(JSON.stringify(b.intents));b.dirty=false;return b}
+var BOTS=[preset()],cur=null,tab="nlp",sel=0,creating=false,root=document.getElementById("root");
+function bot(){return cur}
+function render(){root.innerHTML=cur?builder():list();if(cur)drawChat()}
+function list(){var h='<h1>Danh sách bot</h1><p class="mut">Bước 1: chọn bot mẫu hoặc tạo bot mới.</p><div class="grid">';
+BOTS.forEach(function(b,i){h+='<div class="card"><h3>'+esc(b.name)+'</h3><span class="tag">'+esc(b.lang)+'</span><p class="mut">'+esc(b.desc)+'</p><p class="mut">'+b.intents.length+' ý định</p><button class="p" data-a="open" data-i="'+i+'">Mở bot</button></div>'});
+h+='<div class="card"><h3>Tạo bot mới</h3><p class="mut">Nhập tên, chọn ngôn ngữ, mô tả rồi bấm Tạo Bot.</p><button class="o" data-a="newf">Tạo bot mới</button></div></div>';
+if(creating)h+='<div class="card"><h2>Tạo bot mới</h2><label for="bn">Tên bot</label><input id="bn" placeholder="Ví dụ: Trợ lý hiện vật"><label for="bl">Ngôn ngữ</label><select id="bl"><option>Tiếng Việt</option><option>English</option></select><p class="mut">Mỗi chatbot chỉ hỗ trợ tốt nhất cho một ngôn ngữ.</p><label for="bd">Mô tả</label><textarea id="bd" rows="2" placeholder="Bot này trả lời về..."></textarea><p style="margin-top:12px"><button class="p" data-a="create">Tạo Bot</button> <button data-a="cancel">Hủy</button></p><p id="er" class="warn"></p></div>';
+return h}
+function builder(){var b=cur,T=[["nlp","NLP"],["ks","Kịch bản"],["int","Tích hợp"],["st","Thống kê"]];
+var h='<p><button data-a="back">← Danh sách bot</button></p><h1>'+esc(b.name)+' <span class="tag">'+esc(b.lang)+'</span></h1><div class="cols"><div><div class="tabs" role="tablist">';
+T.forEach(function(t){h+='<button role="tab" data-a="tab" data-t="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+'</button>'});
+h+='</div>'+({nlp:nlp,ks:ks,int:integ,st:stat})[tab]()+'</div><div class="chatp card"><h3>Chat thử với bot</h3><p class="mut" style="margin:0">Bot dùng bản đã đào tạo gần nhất.</p><div class="log" id="log" aria-live="polite"></div><div class="chips" id="qr"></div><form class="row" id="cf"><input id="ci" placeholder="Nhập câu hỏi" aria-label="Câu hỏi" autocomplete="off"><button class="p" type="submit">Gửi</button></form></div></div>';return h}
+function nlp(){var b=cur,it=b.intents[sel],h='<p class="mut">Bước 2: NLP dùng để dạy bot hiểu câu của khách. Mỗi ý định cần nhiều câu mẫu diễn đạt khác nhau.</p><div class="cols" style="grid-template-columns:200px 1fr"><div class="il">';
+b.intents.forEach(function(x,i){h+='<button data-a="sel" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(x.name)+' <span class="mut">('+x.samples.length+')</span></button>'});
+h+='<button class="o" data-a="addi">+ Thêm ý định</button></div><div>';
+if(it){h+='<div class="card"><label for="in">Tên ý định</label><input id="in" data-f="name" value="'+esc(it.name)+'"><label>Câu mẫu</label>';
+it.samples.forEach(function(s,j){h+='<div class="sm"><span>'+esc(s)+'</span><button class="d" data-a="dels" data-j="'+j+'" aria-label="Xóa câu mẫu">Xóa</button></div>'});
+h+='<form class="row" id="sf"><input id="ns" placeholder="Thêm câu mẫu mới" aria-label="Câu mẫu mới"><button type="submit">Thêm</button></form><p style="margin-top:12px"><button class="d" data-a="deli">Xóa ý định này</button></p></div>'}else h+='<div class="card">Chưa có ý định. Bấm “Thêm ý định”.</div>';
+h+='<div class="card"><label for="th">Độ tin cậy tối thiểu: <b id="thv">'+b.thr.toFixed(2)+'</b></label><input type="range" id="th" min="0.1" max="0.9" step="0.05" value="'+b.thr+'"><p class="mut">Dưới ngưỡng này bot dùng câu trả lời mặc định thay vì đoán bừa.</p><button class="p" data-a="train">Đào tạo</button> <span id="ts" class="'+(b.dirty?'warn':'ok')+'">'+(b.dirty?'Có thay đổi chưa đào tạo':'Đã đào tạo')+'</span></div></div></div>';return h}
+function ks(){var b=cur,h='<p class="mut">Bước 3: Kịch bản quyết định bot trả lời gì cho mỗi ý định. Dòng cuối là câu trả lời mặc định.</p>';
+b.intents.forEach(function(x,i){h+='<div class="card"><h3>'+esc(x.name)+'</h3><label for="a'+i+'">Câu trả lời</label><textarea id="a'+i+'" rows="3" data-f="ans" data-i="'+i+'">'+esc(x.answer)+'</textarea><label for="b'+i+'">Nút gợi ý (cách nhau dấu phẩy)</label><input id="b'+i+'" data-f="btn" data-i="'+i+'" value="'+esc(x.btn.join(", "))+'"></div>'});
+return h+'<div class="card"><h3>Trả lời mặc định (khi không hiểu)</h3><textarea rows="2" data-f="fb" aria-label="Trả lời mặc định">'+esc(b.fb)+'</textarea></div>'}
+function integ(){return '<div class="card"><h3>Bước 4: Tích hợp vào website</h3><p>Sao chép đoạn mã nhúng vào trang web (mô phỏng, chưa phải mã FPT.AI thật):</p><pre>&lt;script src="bot-widget.js" data-bot="'+esc(cur.id)+'"&gt;&lt;/script&gt;</pre><p>Bản web bảo tàng đã nhúng khung chat theo cách này:</p><p><a href="https://claude.ai/artifact/H7mtsngph1aNUEgDeFxjeR" target="_blank" rel="noopener">Mở website Bảo tàng Dân tộc học (mô phỏng)</a></p></div>'}
+function stat(){var b=cur,rate=b.msgs?Math.round(b.hit/b.msgs*100):0,h='<div class="grid"><div class="card"><h2>'+b.msgs+'</h2>Tin nhắn đã nhận</div><div class="card"><h2>'+rate+'%</h2>Bot hiểu được</div><div class="card"><h2>'+(b.msgs-b.hit)+'</h2>Bot chưa hiểu</div></div><div class="card"><h3>Xếp hạng ý định</h3>';
+var k=Object.keys(b.top).sort(function(x,y){return b.top[y]-b.top[x]});if(!k.length)h+='<p class="mut">Chưa có dữ liệu. Hãy chat thử với bot.</p>';
+k.forEach(function(n){h+='<div class="sm"><span>'+esc(n)+'</span><b>'+b.top[n]+'</b></div><div class="bar"><i style="width:'+(b.top[n]/b.msgs*100)+'%"></i></div>'});return h+'</div>'}
+function drawChat(){var b=cur,l=document.getElementById("log");if(!l)return;
+if(!b.chat.length)b.chat.push({w:"b",t:"Xin chào! Hãy hỏi mình bất kỳ điều gì về nội dung bot đã được dạy.",q:[]});
+l.innerHTML=b.chat.map(function(m){return '<div class="m '+m.w+'">'+esc(m.t)+(m.d?'<span class="dbg">'+esc(m.d)+'</span>':'')+'</div>'}).join("");l.scrollTop=l.scrollHeight;
+var q=b.chat[b.chat.length-1].q||[],c=document.getElementById("qr");c.innerHTML="";q.forEach(function(t){var x=document.createElement("button");x.type="button";x.textContent=t;x.onclick=function(){say(t)};c.appendChild(x)})}
+function say(q){var b=cur;if(!q.trim())return;b.chat.push({w:"u",t:q});var qt=tok(q),best=0,bi=null;
+b.model.forEach(function(it){it.samples.forEach(function(s){var d=dice(qt,tok(s));if(d>best){best=d;bi=it}})});b.msgs++;
+if(bi&&best>=b.thr){var live=b.intents.filter(function(x){return x.id===bi.id})[0]||bi;b.hit++;b.top[bi.name]=(b.top[bi.name]||0)+1;b.chat.push({w:"b",t:live.answer,q:live.btn,d:"Ý định: "+bi.name+" · độ tin cậy "+best.toFixed(2)})}
+else b.chat.push({w:"b",t:b.fb,q:[],d:"Không đạt ngưỡng · độ tin cậy cao nhất "+best.toFixed(2)+(bi?" ("+bi.name+")":"")});
+drawChat()}
+root.addEventListener("click",function(e){var t=e.target.closest("[data-a]");if(!t)return;var a=t.dataset.a,b=cur;
+if(a==="open"){cur=BOTS[+t.dataset.i];sel=0;tab="nlp"}
+else if(a==="newf")creating=true;else if(a==="cancel")creating=false;
+else if(a==="create"){var n=document.getElementById("bn").value.trim();if(!n){document.getElementById("er").textContent="Nhập tên bot.";return}
+BOTS.push(mk(n,document.getElementById("bl").value,document.getElementById("bd").value));creating=false;cur=BOTS[BOTS.length-1];sel=0;tab="nlp"}
+else if(a==="back")cur=null;else if(a==="tab")tab=t.dataset.t;else if(a==="sel")sel=+t.dataset.i;
+else if(a==="addi"){var id="y_dinh_"+(b.intents.length+1);b.intents.push(I(id,[],"Nhập câu trả lời trong tab Kịch bản."));sel=b.intents.length-1;b.dirty=true}
+else if(a==="dels"){b.intents[sel].samples.splice(+t.dataset.j,1);b.dirty=true}
+else if(a==="deli"){b.intents.splice(sel,1);sel=0;b.dirty=true}
+else if(a==="train"){b.model=JSON.parse(JSON.stringify(b.intents));b.dirty=false}
+else return;render()});
+root.addEventListener("submit",function(e){e.preventDefault();if(e.target.id==="cf"){var i=document.getElementById("ci");say(i.value);i.value=""}
+else if(e.target.id==="sf"){var v=document.getElementById("ns").value.trim();if(v){cur.intents[sel].samples.push(v);cur.dirty=true;render()}}});
+root.addEventListener("input",function(e){var t=e.target,b=cur;if(t.id==="th"){b.thr=+t.value;document.getElementById("thv").textContent=b.thr.toFixed(2);return}
+var f=t.dataset.f;if(!f||!b)return;if(f==="name"){b.intents[sel].name=t.value;b.dirty=true}else if(f==="ans")b.intents[+t.dataset.i].answer=t.value;
+else if(f==="btn")b.intents[+t.dataset.i].btn=t.value.split(",").map(function(x){return x.trim()}).filter(Boolean);else if(f==="fb")b.fb=t.value});
+render();
+</script>
+</body>
+</html>
